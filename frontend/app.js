@@ -1,10 +1,15 @@
-const { useState } = React;
+const { useState, useEffect } = React;
 
 function App() {
   const [guess, setGuess] = useState("");
   const [result, setResult] = useState(null);
+  const [clipData, setClipData] = useState(null);
 
-  const correctStars = 218;
+  useEffect(() => {
+    fetch("http://localhost:3001/api/clip")
+    .then(res => res.json())
+    .then(data => setClipData(data))
+  }, []);
 
   function calculatePoints(diff) {
     const maxPoints = 100;
@@ -16,16 +21,20 @@ function App() {
 
   function handleGuess() {
     const guessNumber = Number(guess);
-    const diff = Math.abs(guessNumber - correctStars);
+    const diff = Math.abs(guessNumber - clipData.correctStars);
     const points = calculatePoints(diff);
 
     setResult({
       correct: diff === 0,
       guessedValue: guessNumber,
-      correctStars,
+      correctStars: clipData.correctStars,
       diff,
       points
     })
+  }
+
+  if(!clipData){
+    return <p>Lädt...</p>
   }
 
   return (
@@ -39,7 +48,7 @@ function App() {
         </div>
     </header>
     <div className="clipContainer">
-      <video className="video" src="assets/testClip.mp4" controls></video>
+      <video className="video" src={clipData.videoUrl} controls></video>
       <div className="clipInput">
         <input 
           className="guessInput"
