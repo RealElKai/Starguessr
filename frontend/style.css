@@ -1,0 +1,207 @@
+:root {
+  --bg-base: #121212;
+  --bg-elevated: #1a1a1a;
+  --bg-card: #1e1e1e;
+  --border-subtle: #2a2a2a;
+  --text-primary: #e0e0e0;
+  --accent: goldenrod;
+}
+
+
+body{
+    background-color: var(--bg-base);
+}
+
+.header{
+    padding: 1cap 1rem;
+    border-radius: 12px;
+
+    margin-bottom: 4px;
+
+    color: var(--accent);
+    background-color: var(--bg-elevated);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.headerButtons{
+    gap: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.submitButton{
+    background-color: var(--accent);
+    color: var(--bg-elevated);
+    border-radius: 5px;
+    cursor: pointer;
+
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.submitButton:hover{
+    background-color: #d4922e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(232, 163, 61, 0.4);
+}
+
+.secondaryButton{
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background-color: transparent;
+    color: goldenrod;
+    font-weight: 500;
+    cursor: pointer;
+
+    transition: border-color 0.15s ease;
+}
+
+.loginButton{
+    background-color: rgb(19, 201, 19);
+    color: var(--bg-elevated);
+    border-radius: 5px;
+    cursor: pointer;
+
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.loginButton:hover{
+    background-color: rgb(16, 214, 16);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(123, 202, 49, 0.4);
+}
+
+.secondaryButton:hover {
+  background-color: #202020;
+  border-color: #5a5959;
+}
+
+.video{
+    width: 100%;
+    height: auto;
+    margin-top: 20px;
+    align-self: center;
+    border-radius: 8px;
+}
+
+.clipContainer{
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-subtle);
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    max-width: 1200px;
+    margin: 0 auto;
+
+    margin-top: 2rem;
+}
+
+.clipInput{
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 15px;
+}
+
+.guessInput{
+    width: 40%;
+    align-self: center;
+    background-color: transparent;
+    border: 2px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.guessButton{
+    background-color: var(--accent);
+    color: var(--bg-elevated);
+    border-radius: 5px;
+    cursor: pointer;
+
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 550;
+
+    transition: transform 0.15s ease;
+}
+
+.guessButton:hover{
+    background-color: #d4922e;
+    transform: translateY(-1px);
+}
+
+.resultText{
+    color: var(--text-primary);
+    align-self: center;
+    margin-top: 10px;
+}
+
+.yourGuess{
+    color: var(--text-primary);
+    align-self: center;
+    font-size: 2rem;
+}
+
+.results{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    color: var(--text-primary);
+    padding: 0.5rem 2rem;
+
+    font-size: 1rem;
+    font-weight: 550;
+
+    align-items: center;
+    min-width: 120px;
+    min-height: 160px;
+}
+
+.resultBox{
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    gap: 100px;
+}
+
+.correctStars{
+    color: var(--accent);
+    align-self: center;
+    font-size: 2rem;
+}
+
+.resultText{
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    opacity: 0.7;
+    margin: 0 0 0.75rem 0;
+}
