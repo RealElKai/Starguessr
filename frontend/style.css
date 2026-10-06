@@ -205,3 +205,31 @@ body{
     opacity: 0.7;
     margin: 0 0 0.75rem 0;
 }
+
+.nextButton{
+    background-color: var(--accent);
+    color: var(--bg-elevated);
+    border-radius: 5px;
+    cursor: pointer;
+
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 550;
+    margin-top: 2rem;
+
+    align-self: center;
+
+    transition: transform 0.15s ease;
+}
+
+.nextButton:hover{
+    background-color: #d4922e;
+    transform: translateY(-1px);
+}
+
+.nextButtonDiv{
+    display: flex;
+    justify-content: center;
+}

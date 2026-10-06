@@ -5,10 +5,18 @@ function App() {
   const [result, setResult] = useState(null);
   const [clipData, setClipData] = useState(null);
 
-  useEffect(() => {
+  function loadNextClip(){
     fetch("http://localhost:3001/api/clip")
     .then(res => res.json())
-    .then(data => setClipData(data))
+    .then(data => {
+      setClipData(data);
+      setResult(null);
+      setGuess("");
+    })
+  }
+
+  useEffect(() => {
+    loadNextClip();
   }, []);
 
   function calculatePoints(diff) {
@@ -48,7 +56,7 @@ function App() {
         </div>
     </header>
     <div className="clipContainer">
-      <video className="video" src={clipData.videoUrl} controls></video>
+      <video className="video" key={clipData.videoUrl} src={clipData.videoUrl} controls></video>
       <div className="clipInput">
         <input 
           className="guessInput"
@@ -79,6 +87,11 @@ function App() {
         <p className="yourGuess">{result ? `+${result.points}` : "???"}</p>
       </div>
 
+    </div>
+    <div className="nextButtonDiv">
+      {result && (
+        <button className="nextButton" onClick={loadNextClip}>Next Clip</button>
+      )}
     </div>
   </div>
 );
