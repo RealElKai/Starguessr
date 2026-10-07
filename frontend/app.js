@@ -52,8 +52,13 @@ function App() {
           placeholder="How many stars?"
           value={guess}
           onChange={(e) => setGuess(e.target.value)}
+          disabled={result !== null}
         />
-        <button className="guessButton" onClick={handleGuess}>Guess</button>
+        <button
+          className="guessButton"
+          onClick={handleGuess}
+          disabled={result !== null}
+          >Guess</button>
       </div>
     </div>
 
