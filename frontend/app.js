@@ -19,26 +19,14 @@ function App() {
     loadNextClip();
   }, []);
 
-  function calculatePoints(diff) {
-    const maxPoints = 100;
-    const penaltyPerStar = 1;
-
-    const points = maxPoints - diff * penaltyPerStar;
-    return Math.max(points,0);
-  }
-
   function handleGuess() {
-    const guessNumber = Number(guess);
-    const diff = Math.abs(guessNumber - clipData.correctStars);
-    const points = calculatePoints(diff);
-
-    setResult({
-      correct: diff === 0,
-      guessedValue: guessNumber,
-      correctStars: clipData.correctStars,
-      diff,
-      points
+    fetch("http://localhost:3001/api/guess", {
+      method: "POST",
+      headers: { "Content-Type": "application/json"},
+      body: JSON.stringify({clipId: clipData.id, guess: Number(guess)})
     })
+      .then(res => res.json())
+      .then(data => setResult({ ...data, guessedValue: Number(guess)}));
   }
 
   if(!clipData){
