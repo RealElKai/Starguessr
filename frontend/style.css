@@ -134,6 +134,11 @@ body{
     color: var(--text-primary);
 }
 
+.guessInput:focus{
+    outline: none;
+    border-color: var(--accent);
+}
+
 .guessButton{
     background-color: var(--accent);
     color: var(--bg-elevated);
