@@ -40,7 +40,7 @@ function App() {
         <div className="headerButtons">
             <button className="secondaryButton">Leaderboard</button>
             <button className="loginButton">Login</button>
-            <button className="submitButton">Submit Clip</button>
+            <a href="submitClip.html" className="submitButton">Submit Clip</a>
         </div>
     </header>
     <div className="clipContainer">

@@ -37,6 +37,9 @@ body{
     color: var(--bg-elevated);
     border-radius: 5px;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-family: Arial, sans-serif;
 
     padding: 0.5rem 1rem;
     font-size: 1rem;
