@@ -13,7 +13,7 @@ app.use(express.json({ limit: '10kb' }));
 app.get('/api/clip', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, video_url FROM clips ORDER BY random() LIMIT 1'
+      'SELECT id, youtube_id FROM clips ORDER BY random() LIMIT 1'
     );
 
     if (result.rows.length === 0) {
@@ -21,7 +21,7 @@ app.get('/api/clip', async (req, res) => {
     }
 
     const clip = result.rows[0];
-    res.json({ id: clip.id, videoUrl: clip.video_url });
+    res.json({ id: clip.id, youtubeId: clip.youtube_id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Serverfehler' });
@@ -125,7 +125,7 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
 
 function calculatePoints(diff) {
   const maxPoints = 100;
-  const penaltyPerStar = 1;
+  const penaltyPerStar = 0.5;
   return Math.max(maxPoints - diff * penaltyPerStar, 0);
 }
 
