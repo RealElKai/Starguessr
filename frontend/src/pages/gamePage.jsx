@@ -30,7 +30,7 @@ function GamePage() {
   }
 
   if(!clipData){
-    return <p>Lädt...</p>
+    return <p>Loading...</p>
   }
 
   return (

@@ -9,6 +9,7 @@
   "keywords": [],
   "type": "commonjs",
   "dependencies": {
+    "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.2.1",

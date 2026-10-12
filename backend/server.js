@@ -3,11 +3,47 @@ const cors = require('cors');
 const pool = require('./db');
 const rateLimit = require('express-rate-limit');
 
+const argon2 = require('argon2');
+
 const app = express();
 const PORT = 3001;
 
 app.use(cors());
 app.use(express.json({ limit: '10kb' }));
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, please try again later' }
+});
+
+app.post('/api/register', registerLimiter, async (req, res) => {
+  const { username, password } = req.body;
+
+  if (typeof username !== 'string' || !/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3-20 characters: letters, numbers, underscore' });
+  }
+  if (typeof password !== 'string' || password.length < 10 || password.length > 128) {
+    return res.status(400).json({ error: 'Password must be 10-128 characters' });
+  }
+
+  try {
+    const hash = await argon2.hash(password);
+    await pool.query(
+      'INSERT INTO users (username, password_hash) VALUES ($1, $2)',
+      [username, hash]
+    );
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Zufälliger Clip, aber OHNE correct_stars
 app.get('/api/clip', async (req, res) => {
@@ -17,14 +53,14 @@ app.get('/api/clip', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Keine Clips vorhanden' });
+      return res.status(404).json({ error: 'No clips available' });
     }
 
     const clip = result.rows[0];
     res.json({ id: clip.id, youtubeId: clip.youtube_id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Serverfehler' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -33,7 +69,7 @@ app.post('/api/guess', async (req, res) => {
   const { clipId, guess } = req.body;
 
   if (!Number.isInteger(clipId) || !Number.isInteger(guess) || guess < 0 || guess > 100000) {
-    return res.status(400).json({ error: 'Ungültige Eingabe' });
+    return res.status(400).json({ error: 'Invalid Input' });
   }
 
   try {
@@ -43,7 +79,7 @@ app.post('/api/guess', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Clip nicht gefunden' });
+      return res.status(404).json({ error: 'Clip not found' });
     }
 
     const correctStars = result.rows[0].correct_stars;
@@ -58,7 +94,7 @@ app.post('/api/guess', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Serverfehler' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -68,7 +104,7 @@ const submitLimiter = rateLimit({
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Zu viele Einsendungen, bitte später erneut versuchen' }
+  message: { error: 'Wow, that`s a lot of submits. Please try again later' }
 });
 
 function extractYoutubeId(input) {
@@ -104,11 +140,11 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
 
   const youtubeId = extractYoutubeId(youtubeUrl);
   if (!youtubeId) {
-    return res.status(400).json({ error: 'Ungültiger YouTube-Link' });
+    return res.status(400).json({ error: 'Invalid YouTube link' });
   }
 
   if (!Number.isInteger(suggestedStars) || suggestedStars < 0 || suggestedStars > 100000) {
-    return res.status(400).json({ error: 'Ungültige Sterne-Anzahl' });
+    return res.status(400).json({ error: 'Invalid Star count' });
   }
 
   try {
@@ -119,7 +155,7 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
     res.status(201).json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Serverfehler' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
