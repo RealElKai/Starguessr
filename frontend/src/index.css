@@ -60,6 +60,9 @@ body{
     font-weight: 600;
 
     transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    max-width: 50%;
+    align-self: center;
 }
 
 .submitButton:hover{
@@ -86,12 +89,16 @@ body{
     color: var(--bg-elevated);
     border-radius: 5px;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-family: Arial, sans-serif;
 
     padding: 0.5rem 1rem;
     font-size: 1rem;
     border: none;
     border-radius: 8px;
     font-weight: 600;
+    align-self: center;
 
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -254,4 +261,66 @@ body{
 .nextButtonDiv{
     display: flex;
     justify-content: center;
+}
+
+.loginForm{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 30px;
+    gap: 15px;
+}
+
+.inputs{
+    width: 40%;
+    align-self: center;
+    background-color: transparent;
+    border: 2px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.inputs:focus{
+    outline: none;
+    border-color: var(--accent);
+}
+
+.submitText{
+    color:var(--accent);
+    align-self: center;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.submitHint{
+    color: var(--text-primary);
+    align-self: center;
+}
+
+.messageError{
+    color: rgb(182, 34, 34);
+    align-self: center;
+}
+
+.messageOk{
+    color:rgb(14, 161, 14);
+    align-self: center;
+}
+
+.loginContainer{
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-subtle);
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    max-width: 500px;
+    margin: 0 auto;
+
+    margin-top: 2rem;
 }

@@ -1,15 +1,111 @@
 const express = require('express');
-const cors = require('cors');
 const pool = require('./db');
 const rateLimit = require('express-rate-limit');
 
 const argon2 = require('argon2');
+const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
+
 
 const app = express();
 const PORT = 3001;
 
-app.use(cors());
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
+
+const SESSION_DAYS = 7;
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const dummyHashPromise = argon2.hash('not-a-real-password');
+
+// Strenger als bei der Registrierung: 10 Versuche pro 15 Minuten und IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, please try again later' }
+});
+
+app.post('/api/login', loginLimiter, async (req, res) => {
+  const { username, password } = req.body;
+
+  if (typeof username !== 'string' || typeof password !== 'string' || password.length > 128) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id, username, password_hash FROM users WHERE lower(username) = lower($1)',
+      [username]
+    );
+    const user = result.rows[0];
+
+    // Auch bei unbekanntem Namen wird ein Hash geprüft, damit die Antwortzeit gleich bleibt
+    const hashToCheck = user ? user.password_hash : await dummyHashPromise;
+    const valid = await argon2.verify(hashToCheck, password);
+
+    if (!user || !valid) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const token = crypto.randomBytes(32).toString('base64url');
+    await pool.query(
+      `INSERT INTO sessions (token_hash, user_id, expires_at)
+       VALUES ($1, $2, now() + make_interval(days => $3))`,
+      [hashToken(token), user.id, SESSION_DAYS]
+    );
+
+    res.cookie('session', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: SESSION_DAYS * 24 * 60 * 60 * 1000
+    });
+    res.json({ ok: true, username: user.username });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Wer bin ich? Das Frontend fragt das beim Laden der Seite
+app.get('/api/me', async (req, res) => {
+  const token = req.cookies.session;
+  if (typeof token !== 'string') return res.json({ user: null });
+
+  try {
+    const result = await pool.query(
+      `SELECT u.username, u.role FROM sessions s
+       JOIN users u ON u.id = s.user_id
+       WHERE s.token_hash = $1 AND s.expires_at > now()`,
+      [hashToken(token)]
+    );
+    res.json({ user: result.rows[0] || null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/logout', async (req, res) => {
+  const token = req.cookies.session;
+  try {
+    if (typeof token === 'string') {
+      await pool.query('DELETE FROM sessions WHERE token_hash = $1', [hashToken(token)]);
+    }
+    res.clearCookie('session');
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Abgelaufene Sessions stündlich löschen
+setInterval(() => {
+  pool.query('DELETE FROM sessions WHERE expires_at < now()').catch(console.error);
+}, 60 * 60 * 1000);
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
