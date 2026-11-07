@@ -16,6 +16,19 @@ app.use(cookieParser());
 const SESSION_DAYS = 7;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
+async function getSessionUser(req) {
+  const token = req.cookies.session;
+  if (typeof token !== 'string') return null;
+
+  const result = await pool.query(
+    `SELECT u.id, u.username, u.role FROM sessions s
+     JOIN users u ON u.id = s.user_id
+     WHERE s.token_hash = $1 AND s.expires_at > now()`,
+    [hashToken(token)]
+  );
+  return result.rows[0] || null;
+}
+
 const dummyHashPromise = argon2.hash('not-a-real-password');
 
 // Strenger als bei der Registrierung: 10 Versuche pro 15 Minuten und IP
@@ -71,17 +84,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
 // Wer bin ich? Das Frontend fragt das beim Laden der Seite
 app.get('/api/me', async (req, res) => {
-  const token = req.cookies.session;
-  if (typeof token !== 'string') return res.json({ user: null });
-
   try {
-    const result = await pool.query(
-      `SELECT u.username, u.role FROM sessions s
-       JOIN users u ON u.id = s.user_id
-       WHERE s.token_hash = $1 AND s.expires_at > now()`,
-      [hashToken(token)]
-    );
-    res.json({ user: result.rows[0] || null });
+    const user = await getSessionUser(req);
+    res.json({ user: user ? { username: user.username, role: user.role } : null });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -244,11 +249,13 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
   }
 
   try {
-    await pool.query(
-      'INSERT INTO submissions (youtube_id, suggested_stars) VALUES ($1, $2)',
-      [youtubeId, suggestedStars]
-    );
-    res.status(201).json({ ok: true });
+  const user = await getSessionUser(req);
+
+  await pool.query(
+    'INSERT INTO submissions (youtube_id, suggested_stars, user_id) VALUES ($1, $2, $3)',
+    [youtubeId, suggestedStars, user ? user.id : null]
+  );
+  res.status(201).json({ ok: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

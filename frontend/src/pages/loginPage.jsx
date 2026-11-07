@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../AuthContext'
 
 function LoginPage(){
     const [username, setUsername] = useState("");
@@ -8,6 +9,7 @@ function LoginPage(){
     const [error, setError] = useState(null);
 
     const navigate = useNavigate();
+    const { refreshUser } = useAuth();
 
     async function handleLogin(e) {
     e.preventDefault();
@@ -24,6 +26,7 @@ function LoginPage(){
     const data = await res.json();
 
     if (res.ok) {
+        await refreshUser();
         navigate("/");
     } else {
         setError(data.error);
@@ -33,6 +36,9 @@ function LoginPage(){
     return (
         <div className='loginContainer'>
             <form onSubmit={handleLogin} className='loginForm'>
+
+                <p className="submitText">Login</p>
+
                 <input 
                 className='guessInput'
                 type="text" value={username}
@@ -48,6 +54,8 @@ function LoginPage(){
                 />
 
                 <button type="submit" className='loginButton'>Login</button>
+
+                <Link className="submitHint" to="/register">No account? Register one!</Link>
 
                 {error && <p className="messageError">{error}</p>}
             </form>

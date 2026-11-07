@@ -4,6 +4,7 @@ function GamePage() {
   const [guess, setGuess] = useState("");
   const [result, setResult] = useState(null);
   const [clipData, setClipData] = useState(null);
+  const [error, setError] = useState(null);
 
   function loadNextClip(){
     fetch("/api/clip")
@@ -19,15 +20,29 @@ function GamePage() {
     loadNextClip();
   }, []);
 
-  function handleGuess() {
-    fetch("/api/guess", {
-      method: "POST",
-      headers: { "Content-Type": "application/json"},
-      body: JSON.stringify({clipId: clipData.id, guess: Number(guess)})
-    })
-      .then(res => res.json())
-      .then(data => setResult({ ...data, guessedValue: Number(guess)}));
+  async function handleGuess() {
+  setError(null);
+  const guessNumber = Number(guess);
+
+  if (guess === "" || !Number.isInteger(guessNumber) || guessNumber < 0 || guessNumber > 100000) {
+    setError("Please enter a whole number between 0 and 100000.");
+    return;
   }
+
+  const res = await fetch("/api/guess", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ clipId: clipData.id, guess: guessNumber })
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    setError(data.error);
+    return;
+  }
+
+  setResult({ ...data, guessedValue: guessNumber });
+}
 
   if(!clipData){
     return <p>Loading...</p>
@@ -42,12 +57,13 @@ function GamePage() {
         src={`https://www.youtube.com/embed/${clipData.youtubeId}`}
         title="Clip"
         allow="encrypted-media; fullscreen"
-        allowFullScreen
       />
       <div className="clipInput">
         <input 
           className="guessInput"
           type="number"
+          min="0" max="100000" step="1"
+          onKeyDown={(e) => { if (['-', '+', 'e', 'E', '.'].includes(e.key)) e.preventDefault(); }}
           placeholder="How many stars?"
           value={guess}
           onChange={(e) => setGuess(e.target.value)}
@@ -59,6 +75,7 @@ function GamePage() {
           disabled={result !== null}
           >Guess</button>
       </div>
+      {error && <p className="messageError">{error}</p>}
     </div>
 
 
