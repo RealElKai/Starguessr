@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('./db');
+const adminPool = require('./dbAdmin');
 const rateLimit = require('express-rate-limit');
 
 const argon2 = require('argon2');
@@ -27,6 +28,18 @@ async function getSessionUser(req) {
     [hashToken(token)]
   );
   return result.rows[0] || null;
+}
+
+async function requireAdmin(req, res, next) {
+  try {
+    const user = await getSessionUser(req);
+    if (!user) return res.status(401).json({ error: 'Not logged in' });
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 }
 
 const dummyHashPromise = argon2.hash('not-a-real-password');
@@ -256,6 +269,104 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
     [youtubeId, suggestedStars, user ? user.id : null]
   );
   res.status(201).json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Ausstehende Einsendungen, älteste zuerst
+app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
+  try {
+    const result = await adminPool.query(
+      `SELECT s.id, s.youtube_id, s.suggested_stars, s.created_at, u.username
+       FROM submissions s
+       LEFT JOIN users u ON u.id = s.user_id
+       WHERE s.status = 'pending'
+       ORDER BY s.created_at ASC
+       LIMIT 50`
+    );
+    res.json({ submissions: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Freigeben: der Admin bestätigt (oder korrigiert) die Sterne
+app.post('/api/admin/submissions/:id/approve', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const { correctStars } = req.body;
+
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  if (!Number.isInteger(correctStars) || correctStars < 0 || correctStars > 100000) {
+    return res.status(400).json({ error: 'Invalid star count' });
+  }
+
+  const client = await adminPool.connect();
+  try {
+    await client.query('BEGIN');
+    const update = await client.query(
+      `UPDATE submissions SET status = 'approved'
+       WHERE id = $1 AND status = 'pending'
+       RETURNING youtube_id`,
+      [id]
+    );
+    if (update.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Submission not found or already handled' });
+    }
+    await client.query(
+      'INSERT INTO clips (youtube_id, correct_stars) VALUES ($1, $2)',
+      [update.rows[0].youtube_id, correctStars]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'This clip already exists' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/api/admin/submissions/:id/reject', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+
+  try {
+    const result = await adminPool.query(
+      `UPDATE submissions SET status = 'rejected' WHERE id = $1 AND status = 'pending'`,
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Submission not found or already handled' });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const result = await adminPool.query(`
+      SELECT
+        (SELECT count(*) FROM users) AS users,
+        (SELECT count(*) FROM clips) AS clips,
+        (SELECT count(*) FROM submissions WHERE status = 'pending') AS pending
+    `);
+    const row = result.rows[0];
+    res.json({
+      users: Number(row.users),
+      clips: Number(row.clips),
+      pendingSubmissions: Number(row.pending)
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

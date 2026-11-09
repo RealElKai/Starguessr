@@ -4,8 +4,9 @@
   --bg-card: #1e1e1e;
   --border-subtle: #2a2a2a;
   --text-primary: #e0e0e0;
-  --accent: goldenrod;
-  --orange-card: rgb(206, 118, 36);
+  --text-secondary: #696868;
+  --accent: #daa520;
+  --orange-card: #ce7624;
 }
 
 
@@ -35,8 +36,8 @@ body{
 
 .logo h1 {
     font-size: 3rem;
-  margin: 1rem;
-  font-family: 'Times New Roman', serif;
+    margin: 1rem;
+    font-family: 'Times New Roman', serif;
 }
 
 .headerButtons{
@@ -456,4 +457,69 @@ body{
     background-color: rgb(216, 40, 40);
     border: 1px solid rgb(216, 40, 40);
     box-shadow: 0 4px 12px rgba(204, 29, 6, 0.4);
+}
+
+.adminLayout{
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+  min-height: 100vh;
+}
+
+.adminHeader {
+    grid-column: 1 / -1;
+    padding: 1cap 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+
+    margin-bottom: 4px;
+
+    color: var(--accent);
+    background-color: var(--bg-elevated);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}   /* Header über beide Spalten */
+
+.adminSidebar{
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8;
+    display: flex;
+    flex-direction: column;
+}
+
+.adminContent{
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8;
+}
+
+.secondaryHeaderText{
+    color: var(--text-secondary);
+    font-size: medium;
+}
+
+.adminSidebarButtons{
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+
+    size: 80%;
+    margin: 0.5rem;
+
+    transition: border-color 0.15s ease;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
